@@ -1,10 +1,11 @@
 # CDK Three Tier Serverless
 
-Sample application demonstrating a three-tier web application using serverless, React and AWS CDK V2.
+## Setup
 
-## Useful commands
+Register a custom domain, e.g. GoDaddy
 
- * `npm i`            install dependencies
- * `npm t`            run tests
- * `npm run deploy`   deploy to your credentialed account
- * `npx cdk destroy`  clean up when you're done
+Create SSL certificate for this domain using ACM (Certificate Management). Can only use us-east-1 region for cert generation.
+
+Edit stack definition in lib folder and set domainName variable to your domain name.
+
+Deploy with npx aws-cdk deploy

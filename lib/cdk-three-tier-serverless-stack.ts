@@ -13,6 +13,7 @@ import {
 } from 'aws-cdk-lib';
 import {
   Distribution,
+  CloudFrontWebDistribution
   OriginAccessIdentity,
   ViewerProtocolPolicy,
 } from 'aws-cdk-lib/aws-cloudfront';
@@ -33,11 +34,24 @@ import { execSync, ExecSyncOptions } from 'child_process';
 import { Construct } from 'constructs';
 import { copySync } from 'fs-extra';
 import { join } from 'path';
+import * as route53 from 'aws-cdk-lib/aws-route53';
+import * as route53targets from 'aws-cdk-lib/aws-route53-targets';
+import * as acm from 'aws-cdk-lib/aws-certificatemanager';
+
 
 export class CdkThreeTierServerlessStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
+    const domainName = "diarmuidoconnor.com";
+    const zone = route53.HostedZone.fromLookup(this, 'HostedZone', { domainName: domainName });
+
+    const certificate = new acm.DnsValidatedCertificate(this, 'SiteCertificate',
+      {
+        domainName: domainName,
+        hostedZone: zone,
+        region: 'us-east-1', // Cloudfront only checks this region for certificates.
+      });
     // Demo-quality props. For production, you want a different removalPolicy and possibly a different billingMode.
     const table = new Table(this, 'NotesTable', {
       billingMode: BillingMode.PAY_PER_REQUEST,
@@ -112,6 +126,8 @@ export class CdkThreeTierServerlessStack extends Stack {
 
     // Cloudfront distribution with SPA config and https upgrade.
     const distribution = new Distribution(this, 'Distribution', {
+      domainNames: [domainName],
+      certificate: certificate,
       defaultBehavior: {
         origin: new S3Origin(websiteBucket, { originAccessIdentity }),
         viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
@@ -192,6 +208,13 @@ export class CdkThreeTierServerlessStack extends Stack {
         }),
       ]),
     });
+
+    new route53.ARecord(this, 'ARecord', {
+      recordName: domainName,
+      target: route53.RecordTarget.fromAlias(new route53targets.CloudFrontTarget(distribution)),
+      zone
+    });
+  
 
     new CfnOutput(this, 'HttpApiUrl', { value: api.apiEndpoint });
 
