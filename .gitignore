@@ -8,3 +8,5 @@ config.json
 .cdk.staging
 cdk.out
 dist
+.DS_Store
+cdk.context.json

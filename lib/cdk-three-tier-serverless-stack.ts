@@ -13,7 +13,6 @@ import {
 } from 'aws-cdk-lib';
 import {
   Distribution,
-  CloudFrontWebDistribution
   OriginAccessIdentity,
   ViewerProtocolPolicy,
 } from 'aws-cdk-lib/aws-cloudfront';
@@ -61,7 +60,7 @@ export class CdkThreeTierServerlessStack extends Stack {
       tableName: 'NotesTable',
     });
 
-    // Functions could have memory tuned to save $$, but should be pretty cheap in any case.
+    // // Functions could have memory tuned to save $$, but should be pretty cheap in any case.
     const readFunction = new NodejsFunction(this, 'ReadNotesFn', {
       architecture: Architecture.ARM_64,
       entry: `${__dirname}/fns/readFunction.ts`,
@@ -78,8 +77,8 @@ export class CdkThreeTierServerlessStack extends Stack {
 
     table.grantWriteData(writeFunction);
 
-    // API could be improved with authorization and models to validate payloads.
-    // In production, you will want access logging.
+    // // API could be improved with authorization and models to validate payloads.
+    // // In production, you will want access logging.
     const api = new HttpApi(this, 'NotesApi', {
       corsPreflight: {
         allowHeaders: ['Content-Type'],
@@ -88,7 +87,7 @@ export class CdkThreeTierServerlessStack extends Stack {
       },
     });
 
-    // Creates the Cfn AWS::ApiGatewayV2::Integration resources
+    // // Creates the Cfn AWS::ApiGatewayV2::Integration resources
     const readIntegration = new HttpLambdaIntegration(
       'ReadIntegration',
       readFunction
@@ -184,7 +183,7 @@ export class CdkThreeTierServerlessStack extends Stack {
       sources: [bundle],
     });
 
-    // Generate a config.json file and place in S3 so the web app can grab the API URL.
+    // // Generate a config.json file and place in S3 so the web app can grab the API URL.
     new AwsCustomResource(this, 'ApiUrlResource', {
       logRetention: RetentionDays.ONE_DAY,
       onUpdate: {
